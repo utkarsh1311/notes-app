@@ -1,10 +1,10 @@
-require('dotenv').config()
+require("dotenv").config();
 
 const express = require("express");
 const app = express();
 const cors = require("cors");
 
-const Note = require('./models/note');
+const Note = require("./models/note");
 
 const requestLogger = (request, response, next) => {
     console.log("Method:", request.method);
@@ -40,30 +40,30 @@ app.post("/api/notes", (req, res) => {
 
     note.save().then(savedNote => {
         res.json(savedNote);
-    })
+    });
 });
 
 app.get("/api/notes", (req, res) => {
     Note.find({}).then(notes => {
         res.json(notes);
-    })
+    });
 });
 
-app.delete("/api/notes/:id", (request, response) => {
-    const id = Number(request.params.id);
+app.delete("/api/notes/:id", (req, res) => {
+    const id = Number(req.params.id);
     notes = notes.filter(note => note.id !== id);
 
-    response.status(204).end();
+    res.status(204).end();
 });
 
 app.get("/api/notes/:id", (req, res) => {
     Note.findById(req.params.id).then(note => {
-        response.json(note);
-    })
+        res.json(note);
+    });
 });
 
-const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error: "unknown endpoint" });
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: "unknown endpoint" });
 };
 
 app.use(unknownEndpoint);
