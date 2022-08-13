@@ -15,15 +15,15 @@ const requestLogger = (request, response, next) => {
 };
 
 app.use(cors());
+app.use(express.static("build"));
 app.use(express.json());
 app.use(requestLogger);
-app.use(express.static("build"));
 
 app.get("/", (req, res) => {
     res.send("<h1>Hello World!</h1>");
 });
 
-app.post("/api/notes", (req, res) => {
+app.post("/api/notes", (req, res, next) => {
     const body = req.body;
 
     if (!body.content) {
@@ -38,9 +38,11 @@ app.post("/api/notes", (req, res) => {
         date: new Date(),
     });
 
-    note.save().then(savedNote => {
-        res.json(savedNote);
-    });
+    note.save()
+        .then(savedNote => {
+            res.json(savedNote);
+        })
+        .catch(error => next(error));
 });
 
 app.get("/api/notes", (req, res) => {
@@ -50,16 +52,35 @@ app.get("/api/notes", (req, res) => {
 });
 
 app.delete("/api/notes/:id", (req, res) => {
-    const id = Number(req.params.id);
-    notes = notes.filter(note => note.id !== id);
-
-    res.status(204).end();
+    Note.findByIdAndRemove(req.params.id)
+        .then(result => {
+            res.status(204).end();
+        })
+        .catch(error => next(error));
 });
 
-app.get("/api/notes/:id", (req, res) => {
-    Note.findById(req.params.id).then(note => {
-        res.json(note);
-    });
+app.get("/api/notes/:id", (req, res, next) => {
+    Note.findById(req.params.id)
+        .then(note => {
+            if (note) {
+                res.json(note);
+            } else {
+                response.status(404).end();
+            }
+        })
+        .catch(error => next(error));
+});
+
+app.put("/api/notes/:id", (req, res, next) => {
+    const { content, important } = req.body;
+
+    Note.findByIdAndUpdate(
+        req.params.id,
+        { content, important },
+        { new: true, runValidators: true, content: "query" }
+    )
+        .then(updatedNote => res.json(updatedNote))
+        .catch(error => next(error));
 });
 
 const unknownEndpoint = (req, res) => {
@@ -67,6 +88,19 @@ const unknownEndpoint = (req, res) => {
 };
 
 app.use(unknownEndpoint);
+
+const errorHandler = (error, req, res, next) => {
+    console.log(error.message);
+
+    if (error.name === "CastError") {
+        return res.status(400).send({ error: "malformatted id" });
+    } else if (error.name === "ValidationError") {
+        return res.status(400).json({ error: error.message });
+    }
+    next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 
