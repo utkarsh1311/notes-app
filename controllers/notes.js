@@ -28,7 +28,8 @@ notesRouter.post("/", (req, res, next) => {
 		date: new Date(),
 	});
 
-	note.save()
+	note
+		.save()
 		.then(savedNote => {
 			res.json(savedNote);
 		})
