@@ -9,10 +9,11 @@ const api = supertest(app);
 beforeEach(async () => {
 	await Note.deleteMany({});
 
-	const noteObjects = helper.initialNotes.map(note => new Note(note));
-	const promiseArray = noteObjects.map(note => note.save());
-	await Promise.all(promiseArray);
-});
+	for (let note of helper.initialNotes) {
+		let noteObject = new Note(note);
+		await noteObject.save();
+	}
+}, 100000);
 
 test("a valid note can be added", async () => {
 	const newNote = {
@@ -31,7 +32,7 @@ test("a valid note can be added", async () => {
 
 	expect(notesAtEnd).toHaveLength(helper.initialNotes.length + 1);
 	expect(contents).toContain("async/await simplifies making async calls");
-});
+}, 100000);
 
 test("note without content is not added", async () => {
 	const newNote = {
@@ -43,26 +44,26 @@ test("note without content is not added", async () => {
 	const notesAtEnd = await helper.notesInDb();
 
 	expect(notesAtEnd).toHaveLength(helper.initialNotes.length);
-});
+}, 100000);
 
 test("notes are returned as json", async () => {
 	await api
 		.get("/api/notes")
 		.expect(200)
 		.expect("Content-Type", /application\/json/);
-});
+}, 100000);
 
 test("all notes are returned", async () => {
 	const response = await api.get("/api/notes");
 
 	expect(response.body).toHaveLength(helper.initialNotes.length);
-});
+}, 100000);
 
 test("specific note is within the returned notes", async () => {
 	const response = await api.get("/api/notes");
 	const contents = response.body.map(r => r.content);
 	expect(contents).toContain("Browser can execute only Javascript");
-});
+}, 100000);
 
 // test to view a specific note
 test("a specific note can be viewed", async () => {
@@ -76,7 +77,7 @@ test("a specific note can be viewed", async () => {
 
 	const processedNoteToView = JSON.parse(JSON.stringify(noteToView));
 	expect(resultNote.body).toEqual(processedNoteToView);
-});
+}, 100000);
 
 // test to delete a single note
 test("a note can be deleted", async () => {
@@ -90,7 +91,7 @@ test("a note can be deleted", async () => {
 
 	const contents = notesAtEnd.map(r => r.content);
 	expect(contents).not.toContain(noteToDelete.content);
-});
+}, 100000);
 
 afterAll(() => {
 	mongoose.connection.close();
