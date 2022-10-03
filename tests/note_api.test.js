@@ -117,11 +117,12 @@ describe("when there is initially some notes saved", () => {
 	});
 });
 
-describe("when there is initially one user in the db", () => {
+describe("when there is initially one user at db", () => {
 	beforeEach(async () => {
 		await User.deleteMany({});
-		const passwordHash = await bcrypt.hash("tatakae", 10);
-		const user = new User({ username: "deathstroke", passwordHash });
+
+		const passwordHash = await bcrypt.hash("sekret", 10);
+		const user = new User({ username: "root", passwordHash });
 
 		await user.save();
 	});
@@ -130,9 +131,9 @@ describe("when there is initially one user in the db", () => {
 		const usersAtStart = await helper.usersInDb();
 
 		const newUser = {
-			username: "deathstroke1311",
-			name: "Slade Wilson",
-			password: "grayson",
+			username: "mluukkai",
+			name: "Matti Luukkainen",
+			password: "salainen",
 		};
 
 		await api
@@ -152,9 +153,9 @@ describe("when there is initially one user in the db", () => {
 		const usersAtStart = await helper.usersInDb();
 
 		const newUser = {
-			username: "deathstroke1311",
-			name: "wade wilson",
-			password: "kamikaze",
+			username: "root",
+			name: "Superuser",
+			password: "salainen",
 		};
 
 		const result = await api
@@ -166,9 +167,10 @@ describe("when there is initially one user in the db", () => {
 		expect(result.body.error).toContain("username must be unique");
 
 		const usersAtEnd = await helper.usersInDb();
-		expect(usersAtEnd).toEqual(usersAtStart);
+		expect(usersAtEnd).toHaveLength(usersAtStart.length);
 	});
 });
+
 afterAll(() => {
 	mongoose.connection.close();
 });
